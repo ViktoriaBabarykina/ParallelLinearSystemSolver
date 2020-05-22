@@ -1,8 +1,9 @@
-#include <mpi.h>
+﻿#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "matrix.h"
 
 #define DEBUG
 
@@ -17,7 +18,6 @@ typedef struct
     double *x_star;		// vector x* for approximated solution
     double *b;
 } equation_data;
-
 
 typedef struct
 {
@@ -44,9 +44,7 @@ typedef struct
 
 
 process_data set_up_world(int Np, int N);
-void print_matrix(double *A, int N, int M);
-void print_matrix_transpose(double *A, int N, int M);
-double *random_matrix(int N, int M);
+
 equation_data random_linear_system(process_data row);
 double *solve_conjugate_gradient(double *A, double *b, int N, int max_steps,
                                  double tol);
@@ -54,7 +52,6 @@ void solve_conjugate_gradient_par(process_data row, equation_data equation,
                                   int max_steps, double tol);
 double max_error(double *real_x, double *approx_x, int N);
 void malloc_test(void *ptr);
-int is_symmetric(double *A, int N);
 
 
 int main(int argc, char **argv)
@@ -185,7 +182,6 @@ int main(int argc, char **argv)
     return 0;
 }
 
-
 process_data set_up_world(int Np, int N)
 {
     process_data row;
@@ -241,40 +237,6 @@ process_data set_up_world(int Np, int N)
     return row;
 }
 
-
-// Print a matrix
-void print_matrix(double *A, int N, int M)
-{
-    char buf[32];
-
-    for (int i = 0; i < N; ++i)
-    {
-        for (int j = 0; j < M; ++j)
-        {
-            snprintf(buf, 6, "%.10f", A[i * M + j]);
-            printf("%s ", buf);
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-
-
-// Print the transpose of a matrix
-void print_matrix_transpose(double *A, int N, int M)
-{
-    for (int j = 0; j < M; ++j)
-    {
-        for (int i = 0; i < N; ++i)
-        {
-            printf("%f ", A[i * M + j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-
-
 // Exits program with error message if ptr is NULL
 void malloc_test(void *ptr)
 {
@@ -285,20 +247,6 @@ void malloc_test(void *ptr)
         exit(0);
     }
 }
-
-
-// Generate a random matrix with numbers in range(0,1)
-double *random_matrix(int N, int M)
-{
-    double *A = malloc(N * M * sizeof(double));
-    malloc_test(A);
-
-    for (int i = 0; i < N * M; ++i)
-        A[i] =(double) rand() /(double)((unsigned) RAND_MAX + 1);
-
-    return A;
-}
-
 
 // Generate a random positive definite equation with solution by
 // 1. Generating a random matrix A
@@ -318,6 +266,7 @@ equation_data random_linear_system(process_data row)
 
     equation.N = row.N;
     equation.A = random_matrix(row.count, row.N);
+    malloc_test(equation.A);
 
     if (row.Np > 1)
     {
@@ -406,6 +355,7 @@ equation_data random_linear_system(process_data row)
 
     // Generate random solution x, zero matrix b, and memory for x*
     equation.x = random_matrix(row.count, 1);
+    malloc_test(equation.x);
     equation.x_star = calloc(row.count, sizeof(double));
     equation.b = calloc(row.count, sizeof(double));
     malloc_test(equation.x_star);
@@ -458,7 +408,6 @@ equation_data random_linear_system(process_data row)
     return equation;
 }
 
-
 // Calculate max(abs(real_x-approx_x))
 double max_error(double *real_x, double *approx_x, int N)
 {
@@ -474,21 +423,6 @@ double max_error(double *real_x, double *approx_x, int N)
 
     return max;
 }
-
-
-// Determine if a matrix is symmetric
-int is_symmetric(double *A, int N)
-{
-    int bool = 1;
-
-    for (int i = 0; i < N; ++i)
-        for (int j = 0; j < N; ++j)
-            if (A[i * N + j] != A[j * N + i])
-                bool = 0;
-
-    return bool;
-}
-
 
 // Solve Ax = b for x, using the Conjugate Gradient method.
 // Terminates once the maximum number of steps or tolerance has been reached
@@ -568,7 +502,6 @@ double *solve_conjugate_gradient(double *A, double *b, int N, int max_steps,
 
     return x;
 }
-
 
 void solve_conjugate_gradient_par(process_data row, equation_data equation,
                                   int max_steps, double tol)

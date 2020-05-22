@@ -7,4 +7,8 @@ INCLUDEPATH += \
         /usr/include/mpich
 
 SOURCES += \
-        main.c
+        main.c \
+        matrix.c
+
+HEADERS += \
+    matrix.h
