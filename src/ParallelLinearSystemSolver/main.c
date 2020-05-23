@@ -8,14 +8,13 @@
 #include "conjugate_gradient.h"
 #include "conjugate_gradient_parallel.h"
 
-#define DEBUG
+//#define DEBUG
 
 int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
 
-    double tol, *A, *x, *x_star, *x_star_seq, *b, start_time, setup_time,
-            solution_time;
+    double tol, *A, *x, *x_star, *x_star_seq, *b, start_time, setup_time, solution_time;
     int Np, N, tol_digits, temp_rank;
     equation_data equation;
     process_data row;
@@ -29,8 +28,7 @@ int main(int argc, char **argv)
     if (argc != 2 || N < 1 || Np > N)
     {
         if (temp_rank == 0)
-            printf
-                    ("Incorrect input argument. Expected and integer N, 0 < Np <= N\n");
+            printf("Incorrect input argument. Expected and integer N, 0 < Np <= N\n");
         MPI_Abort(MPI_COMM_WORLD, 0);
         return 0;
     }
