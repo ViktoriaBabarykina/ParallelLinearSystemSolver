@@ -22,11 +22,9 @@ process_data set_up_world(int Np, int N)
     // Calculate the number of rows handled by each process
     large_count = N % Np;
     row.count_min = N / Np;
-    row.count_max =(large_count == 0) ?(row.count_min) :(row.count_min + 1);
-    row.count =(row.coord < large_count) ?(row.count_max) :(row.count_min);
-    row.displ =
-            row.coord *(row.count_min) +
-            ((row.coord <= large_count) ?(row.coord) :(large_count));
+    row.count_max = (large_count == 0) ? (row.count_min) : (row.count_min + 1);
+    row.count = (row.coord < large_count) ? (row.count_max) : (row.count_min);
+    row.displ = row.coord * (row.count_min) + ((row.coord <= large_count) ? (row.coord) : (large_count));
 
     // Create types for a block within a row, a transposed block, and a full row
     MPI_Type_vector(row.count, 1, row.N, MPI_DOUBLE, &row_t);
