@@ -9,5 +9,6 @@ void print_x(equation_data eq, process_data row);
 void print_x_star(equation_data eq, process_data row);
 equation_data generate_test_input();
 void print_ar(double *ar, int len);
+void init_ar_with_zeroes(double *ar, int len);
 
 #endif // DEBUGGING_H

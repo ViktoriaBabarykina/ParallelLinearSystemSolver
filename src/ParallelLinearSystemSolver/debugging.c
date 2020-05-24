@@ -5,11 +5,13 @@
 void print_a(equation_data eq, process_data row)
 {
     printf("\nMatrix A for rank %d:\n", row.rank);
-    for (int i = 0; i < eq.N * eq.N; i++)
+    for (int i = 0; i < eq.N; i++)
     {
-        printf("%lf ", eq.A[i]);
-        if (i % eq.N == 0 && i != 0)
-            printf("\n");
+        for (int j = 0; j < eq.N; j++)
+        {
+            printf("%lf ", eq.A[i * eq.N + j]);
+        }
+        printf("\n");
     }
     printf("\n- - - - - - - - -\n");
 }
@@ -83,5 +85,13 @@ void print_ar(double *ar, int len)
     for (int i = 0; i < len; i++)
     {
         printf("%lf ", ar[i]);
+    }
+}
+
+void init_ar_with_zeroes(double *ar, int len)
+{
+    for (int i = 0; i < len; i++)
+    {
+        ar[i] = 0;
     }
 }

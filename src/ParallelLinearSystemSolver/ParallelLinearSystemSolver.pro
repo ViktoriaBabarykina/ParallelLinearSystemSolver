@@ -11,6 +11,7 @@ SOURCES += \
         conjugate_gradient.c \
         conjugate_gradient_parallel.c \
         debugging.c \
+        io.c \
         main.c \
         matrix.c
 
@@ -19,4 +20,5 @@ HEADERS += \
     conjugate_gradient.h \
     conjugate_gradient_parallel.h \
     debugging.h \
+    io.h \
     matrix.h
