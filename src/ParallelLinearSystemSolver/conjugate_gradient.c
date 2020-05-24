@@ -1,5 +1,6 @@
 #include "conjugate_gradient.h"
 #include <stdlib.h>
+#include <math.h>
 
 // Solve Ax = b for x, using the Conjugate Gradient method.
 // Terminates once the maximum number of steps or tolerance has been reached

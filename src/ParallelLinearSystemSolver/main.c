@@ -10,14 +10,12 @@
 #include "conjugate_gradient_parallel.h"
 #include "debugging.h"
 
-//#define DEBUG
-#define VERIFY
 
 int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
 
-    double tol, *A, *x, *x_star, *x_star_seq, *b, start_time, setup_time, solution_time;
+    double tol, *x = NULL, *x_star = NULL, start_time, setup_time, solution_time;
     int Np, N, tol_digits, temp_rank;
     equation_data equation;
     process_data row;
@@ -67,62 +65,17 @@ int main(int argc, char **argv)
     // Gather and stuff
     if (row.rank == 0)
     {
-#if defined(DEBUG)
-        A = malloc(N * N * sizeof(double));
-        b = malloc(N * sizeof(double));
-#endif
-#if defined(DEBUG) || defined(VERIFY)
         x = malloc(N * sizeof(double));
         x_star = malloc(N * sizeof(double));
-#endif
     }
 
-#if defined(DEBUG)
-    MPI_Gatherv(equation.A, row.count, row.row_t, A, row.counts, row.displs,
-                row.row_t, 0, row.comm);
-    MPI_Gatherv(equation.b, row.count, MPI_DOUBLE, b, row.counts, row.displs,
-                MPI_DOUBLE, 0, row.comm);
-#endif
-#if defined(DEBUG) || defined(VERIFY)
     MPI_Gatherv(equation.x, row.count, MPI_DOUBLE, x, row.counts, row.displs,
                 MPI_DOUBLE, 0, row.comm);
     MPI_Gatherv(equation.x_star, row.count, MPI_DOUBLE, x_star, row.counts,
                 row.displs, MPI_DOUBLE, 0, row.comm);
-#endif
 
     if (row.rank == 0)
     {
-#if defined(DEBUG)
-        x_star_seq = solve_conjugate_gradient(A, b, N, N, tol);
-        malloc_test(x_star_seq);
-
-        if (N <= 20)
-        {
-            printf("A:\n");
-            print_matrix(A, N, N);
-            printf("b:\n");
-            print_matrix(b, N, 1);
-            printf("x:\n");
-            print_matrix(x, N, 1);
-            printf("x*:\n");
-            print_matrix(x_star, N, 1);
-            printf("x* seq:\n");
-            print_matrix(x_star_seq, N, 1);
-        }
-        else
-        {
-            printf
-                    ("Warning: Attempts to print matrices larger than 20x20 are suppressed.\n");
-        }
-        printf("A symmetric: %s\n",(is_symmetric(A, N)) ?("Yes") :("No"));
-        printf("Seq max error: %.*f\n", tol_digits + 5,
-               max_error(x, x_star_seq, N));
-
-        free(A);
-        free(b);
-        free(x_star_seq);
-#endif
-#if defined(DEBUG) || defined(VERIFY)
         printf("Par max error: %.*f\n", tol_digits + 5,
                max_error(x, x_star, N));
 
@@ -135,14 +88,9 @@ int main(int argc, char **argv)
 
         free(x);
         free(x_star);
-#endif
 
         printf("Generate time: %f\n", setup_time);
         printf("Solution time: %f\n", solution_time);
-
-//        sleep(row.rank);
-//        print_x(equation, row);
-//        print_x_star(equation, row);
     }
 
     free(equation.A);

@@ -6,14 +6,11 @@
 // Print a matrix
 void print_matrix(double *A, int N, int M)
 {
-    char buf[32];
-
     for (int i = 0; i < N; ++i)
     {
         for (int j = 0; j < M; ++j)
         {
-            snprintf(buf, 6, "%.10f", A[i * M + j]);
-            printf("%s ", buf);
+            printf("%.10lf ", A[i * M + j]);
         }
         printf("\n");
     }
@@ -27,7 +24,7 @@ void print_matrix_transpose(double *A, int N, int M)
     {
         for (int i = 0; i < N; ++i)
         {
-            printf("%f ", A[i * M + j]);
+            printf("%lf ", A[i * M + j]);
         }
         printf("\n");
     }

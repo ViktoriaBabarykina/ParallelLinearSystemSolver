@@ -1,5 +1,8 @@
 #include "conjugate_gradient_parallel.h"
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include "matrix.h"
 
 process_data set_up_world(int Np, int N)
