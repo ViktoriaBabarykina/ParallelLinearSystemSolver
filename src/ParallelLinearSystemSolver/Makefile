@@ -1,12 +1,15 @@
-CC = mpicc
-override CFLAGS += -O3 -std=c99
-LIBS = -lmpi -lm
-OBJS = main.o matrix.o common_math.o conjugate_gradient.o conjugate_gradient_parallel.o io.o debugging.o
+FLAGS = -O3 -Wall -fopenmp
+SRCS =   main.cpp IO.cpp conj_grad_solve.cpp
+OBJS = main.o IO.o conj_grad_solve.o
 
-ParallelLinearSystemSolver: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+ParallelLinearSystemSolver: $(OBJS)  
+	mpic++ ${FLAGS} -o $@ $(OBJS) 
+	export OMP_NUM_THREADS=2  
 
-clean: 
-	rm -f ParallelLinearSystemSolver $(OBJS)
+%.o: %.cpp 
+	mpic++ $(FLAGS) -c $<
+
+clean:
+	rm -f $(OBJS) ./ParallelLinearSystemSolver
 
 .PHONY: clean

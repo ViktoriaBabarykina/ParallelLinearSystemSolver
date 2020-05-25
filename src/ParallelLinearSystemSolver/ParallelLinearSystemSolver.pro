@@ -4,21 +4,14 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 INCLUDEPATH += \
+        /usr/lib/gcc/x86_64-linux-gnu/7/include \
         /usr/include/mpich
 
 SOURCES += \
-        common_math.c \
-        conjugate_gradient.c \
-        conjugate_gradient_parallel.c \
-        debugging.c \
-        io.c \
-        main.c \
-        matrix.c
+        conj_grad_solve.cpp \
+        IO.cpp \
+        main.cpp \
 
 HEADERS += \
-    common_math.h \
-    conjugate_gradient.h \
-    conjugate_gradient_parallel.h \
-    debugging.h \
-    io.h \
-    matrix.h
+    	conj_grad_solve.hpp \
+        IO.hpp \
