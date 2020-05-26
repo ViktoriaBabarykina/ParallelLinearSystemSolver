@@ -21,15 +21,16 @@ using mat = std::vector<vec>;            // matrix (=collection of (row) vectors
 
 int main(int argc, char **argv)
 {
-    int n = 6;  // size of the matrix --> later can make this a command line argument,--> I.e. as for this input...
+    int n = atoi(argv[1]);  // size of the matrix
     double error_tol = 1e-8;
     double tolerance = 1e-8;
 
     int num_solves = 1;  // number of solves of CG to do, for better statistics of cpu time
 
 //   If want to use txt files:
-    std::string matrix_filename = "matrix.txt";
-    std::string rhs_filename = "rhs.txt";
+    std::string matrix_filename(argv[2]);
+    std::string rhs_filename(argv[3]);
+    std::string output_filename(argv[4]);
 
     MPI_Init (&argc, &argv);
     int nprocs, rank;
@@ -96,6 +97,8 @@ int main(int argc, char **argv)
         std::cout << " Total CPU time = " << cpu_time*num_solves << std::endl;
         std::cout << " CPU time per CG solve = " << cpu_time << std::endl;
         std::cout << " CPU time per iter = " << cpu_time_per_iter << std::endl;
+
+        write_vector(output_filename, x);
     }
 
     MPI_Finalize();

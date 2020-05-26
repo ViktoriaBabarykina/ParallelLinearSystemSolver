@@ -70,5 +70,17 @@ vec read_vector(const int n, std::string filename)
     for (int i = 0; i < n; i++)
         vector_file >> input_vec[i];
 
+    vector_file.close();
     return input_vec;
+}
+
+void write_vector(std::string filename, const vec &vector)
+{
+    std::ofstream vector_file;
+    vector_file.open(filename);
+
+    for (size_t i = 0; i < vector.size(); i++)
+        vector_file << vector[i] << " ";
+
+    vector_file.close();
 }

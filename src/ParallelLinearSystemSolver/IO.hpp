@@ -27,3 +27,5 @@ mat read_matrix(const int n, std::string filename);
 vec read_vector(const int n, std::string filename);
 
 mat read_sub_matrix(const int n, std::string filename, int rank, int np);
+
+void write_vector(std::string filename, const vec &vector);
