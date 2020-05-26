@@ -32,7 +32,7 @@ void print(const mat &A)
    }
 }
 
-mat read_matrix(const unsigned int n, std::string filename)
+mat read_matrix(const int n, std::string filename)
 {
     std::ifstream matrix_file;
     matrix_file.open(filename);
@@ -41,21 +41,33 @@ mat read_matrix(const unsigned int n, std::string filename)
     mat input_mat(n, std::vector<double>(n)); // recall that mat is a vector of vectors, hence the tricky notation for initialization
 
     // read in the values
-    for (size_t i = 0; i < n; i++)
-        for (size_t j = 0; j < n; j++)
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
             matrix_file >> input_mat[i][j];
 
+    matrix_file.close();
     return input_mat;
 }
 
-vec read_vector(const unsigned int n, std::string filename)
+mat read_sub_matrix(const int n, std::string filename, int rank, int np)
+{
+    mat matrix = read_matrix(n, filename);
+    mat sub_A(n / np, std::vector<double> (n));  // note: this is the correct way to initialize a vector of vectors.
+    for (int i = 0; i < n / np; i++)
+        for (int j = 0; j < n; j++)
+            sub_A[i][j] = matrix[rank * n / np + i][j];
+
+    return sub_A;
+}
+
+vec read_vector(const int n, std::string filename)
 {
     std::ifstream vector_file;
     vector_file.open(filename);
 
     vec input_vec(n);
 
-    for (size_t i = 0; i < n; i++)
+    for (int i = 0; i < n; i++)
         vector_file >> input_vec[i];
 
     return input_vec;

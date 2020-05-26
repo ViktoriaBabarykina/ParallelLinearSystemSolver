@@ -3,6 +3,7 @@
 #include <omp.h>
 #include <time.h>
 #include <chrono>
+#include <unistd.h>
 
 using vec = std::vector<double>;         // vector
 using mat = std::vector<vec>;            // matrix (=collection of (row) vectors)
@@ -42,16 +43,17 @@ double dot_product(const vec &u, const vec &v)
     return __gnu_parallel::inner_product(u.begin(), u.end(), v.begin(), 0.0);  // parallelized inner product
 }
 
-
 // performs a reduction over the sub-vectors which are passed to it... All_Reduce broadcasts the value to all procs
 double mpi_dot_product(const vec &sub_u, const vec &sub_v) // need to pass it the buffer where to keep the result
 {
     double product;
     size_t length = sub_u.size();
 
+    //std::cout << "sub_u size: " << sub_u.size() << " sub_v size: " << sub_v.size() << std::endl;
+
     // Explicitely coded OpenMP inner product (other option is to use gnu parallel function
     double sub_prod = 0.0;
-    #pragma omp parallel for reduction(+:sub_prod)
+    #pragma omp parallel for reduction(+:sub_prod) // !!!
     for (size_t i = 0; i < length; i++) {
         sub_prod += sub_u[i] * sub_v[i];
     }
@@ -116,6 +118,9 @@ vec conj_grad_solver(const mat &sub_A, const vec &b, const double tolerance, con
         sub_x[i] = initial_guess[(m/static_cast<size_t>(nprocs))*static_cast<size_t>(rank) + i];
     }
 
+    if (rank == 0)
+        std::cout << "Domain decomposition completed." << std::endl;
+
     //----------------------------- Main Conugate Gradient Algorithm ----------------------------------------------
 
     vec x(m);  // iniitalize a vector to store the solution subvector
@@ -125,6 +130,9 @@ vec conj_grad_solver(const mat &sub_A, const vec &b, const double tolerance, con
     vec result1(m/static_cast<size_t>(nprocs)), result2(m/static_cast<size_t>(nprocs)), result3(m/static_cast<size_t>(nprocs)); // buffers
     vec sub_a_times_p(m/static_cast<size_t>(nprocs));
     int max_iter = 100000;
+
+    if (rank == 0)
+        std::cout << "Buffers allocated." << std::endl;
 
     double sub_r_sqrd, sub_p_by_ap, norm_sub_r, sub_sub_r_sqrd, sub_sub_p_by_ap, alpha, sub_r_sqrd_old, beta;
 
@@ -139,8 +147,10 @@ vec conj_grad_solver(const mat &sub_A, const vec &b, const double tolerance, con
         sub_r_sqrd_old = sub_r_sqrd;  // save a recalculation of r_old^2 later
 
         mat_times_vec(sub_A, p, sub_a_times_p);  //split up with MPI and then finer parallelize with openmp
+        //std::cout << rank << " mat_times_vec done." << std::endl;
 
-        sub_p_by_ap = mpi_dot_product(sub_p, sub_a_times_p);
+        sub_p_by_ap = mpi_dot_product(sub_p, sub_a_times_p);  // !!!
+        //std::cout << rank << " mpi_dot_product done." << std::endl;
 
         alpha = sub_r_sqrd/sub_p_by_ap;         
 
@@ -152,11 +162,13 @@ vec conj_grad_solver(const mat &sub_A, const vec &b, const double tolerance, con
         sub_r = result2;
 
         sub_r_sqrd = mpi_dot_product(sub_r, sub_r);
+        //std::cout << rank << " mpi_dot_products done." << std::endl;
 
         // recall that we can't have a 'break' within an openmp parallel region, so end it here then all threads are merged, and the convergence is checked
         // Convergence test
         if (sqrt(sub_r_sqrd) < tolerance) { // norm is just sqrt(dot product so don't need to use a separate norm fnc) // vector norm needs to use a all reduce!
-            std:: cout << "Converged at iter = " << i << std::endl;
+            if (rank == 0)
+                std:: cout << "Converged at iteration = " << i << std::endl;
             total_iters = i;
             break;
         }
@@ -166,10 +178,17 @@ vec conj_grad_solver(const mat &sub_A, const vec &b, const double tolerance, con
         vec_lin_combo(1.0, sub_r, beta, sub_p, result3);             // Next gradient
         sub_p = result3;
 
+        //std::cout << rank << " Iteration: " << i << std::endl;
+
         // We need to update p (full vector)  value  through a gather!! for the next iteration b/c it's needed in mat_times_vec
         MPI_Allgatherv(&sub_p.front(), row_cnt[rank], MPI_DOUBLE, &p.front(), row_cnt, row_disp, MPI_DOUBLE, MPI_COMM_WORLD);
 
+//        std::cout << rank << " sub_x on iteration: " << i << std::endl;
+//        print(sub_x);
     }
+
+    if (rank == 0)
+        std::cout << "Gathering solution from all mpi nodes." << std::endl;
 
     // need a final gather to get back to full x...
     MPI_Gatherv(&sub_x.front(), row_cnt[rank], MPI_DOUBLE, &x.front(), row_cnt, row_disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -387,6 +406,15 @@ vec conj_grad_solver_omp_sections(const mat &sub_A, const vec &b, const double t
 
     // need a final gather to get back to full x
     MPI_Gatherv(&sub_x.front(), row_cnt[rank], MPI_DOUBLE, &x.front(), row_cnt, row_disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    sleep(2);
+    if (rank == 0)
+    {
+        std::cout << "X fin:" << std::endl;
+        print(x);
+    }
+
+    sleep(2);
 
     return x;
 }

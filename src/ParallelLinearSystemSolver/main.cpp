@@ -21,13 +21,11 @@ using mat = std::vector<vec>;            // matrix (=collection of (row) vectors
 
 int main(int argc, char **argv)
 {
-    std::cout << "Program started." << std::endl;
-
     int n = 6;  // size of the matrix --> later can make this a command line argument,--> I.e. as for this input...
     double error_tol = 1e-8;
     double tolerance = 1e-8;
 
-    int num_solves = 3;  // number of solves of CG to do, for better statistics of cpu time
+    int num_solves = 1;  // number of solves of CG to do, for better statistics of cpu time
 
 //   If want to use txt files:
     std::string matrix_filename = "matrix.txt";
@@ -38,26 +36,15 @@ int main(int argc, char **argv)
     MPI_Comm_size (MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 
-    const mat sub_A = read_matrix(n, matrix_filename);
+    const mat sub_A = read_sub_matrix(n, matrix_filename, rank, nprocs);
     const mat A = read_matrix(n, matrix_filename);
     const vec b = read_vector(n, rhs_filename);
     const vec initial_guess = vec({0, 0, 0, 0, 0, 0});
     int total_iters;
     vec x;
 
-    sleep(rank);
-    std::cout << "Input data readed." << std::endl;
-    std::cout << "Matrix sub_A: " << std::endl;
-    print(sub_A);
-
-    std::cout << "Matrix A: " << std::endl;
-    print(A);
-
-    std::cout << "rhs b: " << std::endl;
-    print(b);
-
-    std::cout << "initial_guess: " << std::endl;
-    print(initial_guess);
+    if (rank == 0)
+        std::cout << "Input data readed." << std::endl;
 
     // Repeat CG solve a few times for statistical average of CPU time
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -72,8 +59,6 @@ int main(int argc, char **argv)
 
     }
 
-    std::cout << "Linear system solved." << std::endl;
-
     std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> time = std::chrono::duration_cast<std::chrono::duration<double>>(finish-start);
 
@@ -85,11 +70,11 @@ int main(int argc, char **argv)
         std::cout << "rhs b: " << std::endl;
         print(b);
 
-        std::cout << "solution x: " << std::endl;
+        std::cout << "Calculated solution x: " << std::endl;
         print(x);
 
         vec A_times_x(x.size());
-        std::cout << "Check A*x = b " << std::endl;
+        std::cout << "Check A*x = " << std::endl;
         mat_times_vec(A, x, A_times_x);
         print(A_times_x);
 
@@ -100,8 +85,10 @@ int main(int argc, char **argv)
             error[i] = abs(A_times_x[i] - b[i]);
         }
         if (*std::max_element(error.begin(), error.end()) > error_tol)
-            std::cout << "Error in solution is larger than " << error_tol << std::endl;
-        //print(error);
+            std::cout << "Error in solution is larger than " << error_tol << ":" << std::endl;
+        else
+            std::cout << "Error is in tolerance interval and under " << error_tol << ":" << std::endl;
+        print(error);
 
         double cpu_time = time.count()/num_solves; // is cpu time per CG solve
         double cpu_time_per_iter = cpu_time/total_iters;

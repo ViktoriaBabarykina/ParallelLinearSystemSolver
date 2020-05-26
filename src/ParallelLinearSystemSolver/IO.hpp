@@ -21,7 +21,9 @@ void print(const vec &V);
 void print(const mat &A);
 
 //! Read a matrix from a text file
-mat read_matrix(const unsigned int n, std::string filename);
+mat read_matrix(const int n, std::string filename);
 
 //! Read a vector from a text file
-vec read_vector(const unsigned int n, std::string filename);
+vec read_vector(const int n, std::string filename);
+
+mat read_sub_matrix(const int n, std::string filename, int rank, int np);
